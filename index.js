@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 const example = `
-  let a = 1;
-  let b = a;
+  let b = "foo 1 let";
+  let a = 123;
 `;
 
 // let a = 1; Variable Id Apply Int
@@ -19,6 +19,7 @@ const STATE = {
   nothing: 0,
   identifier: 1,
   integer: 2,
+  string: 3,
 }
 
 const KEYWORDS = ['let']
@@ -40,9 +41,13 @@ class Lexer {
     return this.input[this.position]
   }
 
+  resetCurrentLexem() {
+    this.current = { type: '', content: '' }
+  }
+
   finishLexem() {
     this.lexems.push(this.current)
-    this.current = { type: '', content: '' }
+    this.resetCurrentLexem()
     this.state = STATE.nothing
   }
 
@@ -50,7 +55,9 @@ class Lexer {
     const char = this.currentChar()
     this.current.content += char
 
-    if (!(/\w/.test(this.nextChar()))) {
+    const isNextIdent = /\w/.test(this.nextChar())
+
+    if (!isNextIdent) {
       if (KEYWORDS.includes(this.current.content)) {
         this.current.type = 'keyword'
       }
@@ -72,6 +79,18 @@ class Lexer {
     this.position++
   }
 
+  eatString() {
+    this.current.content += this.currentChar()
+
+    const isNextQuote = this.nextChar() === '"'
+    if (isNextQuote) {
+      this.finishLexem();
+      this.position++
+    }
+
+    this.position++
+  }
+
   eatNothing() {
     const char = this.currentChar();
 
@@ -81,6 +100,7 @@ class Lexer {
         this.current = { type: 'eoe' }
         this.finishLexem()
         this.position++
+        break;
       }
 
       // identifier
@@ -111,34 +131,59 @@ class Lexer {
         this.finishLexem();
         break;
       }
+
+      // string
+      case '"' === char: {
+        this.state = STATE.string;
+        this.current.type = 'string'
+        this.position++
+        break;
+      }
+
+      default: {
+        console.log('<<<<<')
+        this.position++;
+        // this.resetCurrentLexem();
+      }
     }
   }
 
-  eat() {
-    while (this.input.length > this.position) {
-      switch (this.state) {
-        case STATE.nothing: {
-          this.eatNothing();
-          break;
-        }
-        case STATE.identifier: {
-          this.eatIdentifier();
-          break;
-        }
-        case STATE.integer: {
-          this.eatInteger();
-          break;
-        }
+  step() {
+    switch (this.state) {
+      case STATE.nothing: {
+        this.eatNothing();
+        break;
       }
+
+      case STATE.identifier: {
+        this.eatIdentifier();
+        break;
+      }
+
+      case STATE.integer: {
+        this.eatInteger();
+        break;
+      }
+
+      case STATE.string: {
+        this.eatString();
+        break;
+      }
+    }
+  }
+
+  parse() {
+    while (this.input.length > this.position) {
+      this.step()
     }
     return this.lexems
   }
 }
 
 function parse(input) {
-  const lexer = new Lexer(input)
+  const lexems = new Lexer(input).parse()
 
-  return lexer.eat()
+  return lexems
 }
 
 
