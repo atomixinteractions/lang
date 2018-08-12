@@ -3,6 +3,7 @@
 const example = `
   let b = "foo 1 let";
   let a = 123;
+  let c = (1 + 2 * 3);
 `;
 
 // let a = 1; Variable Id Apply Int
@@ -128,6 +129,54 @@ class Lexer {
       case '=' === char: {
         this.position++;
         this.current = { type: 'equal' }
+        this.finishLexem();
+        break;
+      }
+
+      // plus
+      case '+' === char: {
+        this.position++;
+        this.current = { type: 'plus' }
+        this.finishLexem();
+        break;
+      }
+
+      // minus
+      case '-' === char: {
+        this.position++;
+        this.current = { type: 'minus' }
+        this.finishLexem();
+        break;
+      }
+
+      // div
+      case 'div' === char: {
+        this.position++;
+        this.current = { type: 'div' }
+        this.finishLexem();
+        break;
+      }
+
+      // mul
+      case '*' === char: {
+        this.position++;
+        this.current = { type: 'mul' }
+        this.finishLexem();
+        break;
+      }
+
+      // (
+      case '(' === char: {
+        this.position++;
+        this.current = { type: 'lbrace' }
+        this.finishLexem();
+        break;
+      }
+
+      // )
+      case ')' === char: {
+        this.position++;
+        this.current = { type: 'rbrace' }
         this.finishLexem();
         break;
       }
